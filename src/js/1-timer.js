@@ -10,8 +10,8 @@ const hour = document.querySelector('span[data-hours]');
 const minute = document.querySelector('span[data-minutes]');
 const second = document.querySelector('span[data-seconds]');
 
-btnStart.disabled = true;
-let userSelectedDate = '';
+let userSelectedDate = null;
+let intervalId = null;
 
 const options = {
     enableTime: true,
@@ -20,22 +20,25 @@ const options = {
     minuteIncrement: 1,
 
     onClose(selectedDates) {
-    if (selectedDates[0] < new Date()) {
-        iziToast.error({
-        title: 'Error',
-        message: 'Please choose a date in the future',
-    });
-    
-    btnStart.disabled = true;
-    } else {
-        userSelectedDate = selectedDates[0];
-        btnStart.disabled = false;
-        iziToast.success({
-        title: 'OK',
-        message: 'You can press "Start"!',
-    });
-    }
-},
+        if (intervalId) {
+            input._flatpickr.clear();
+        } else {
+            if (selectedDates[0] < new Date()) {
+                iziToast.error({
+                    title: 'Error',
+                    message: 'Please choose a date in the future',
+                });
+                btnStart.disabled = true;
+            } else {
+                userSelectedDate = selectedDates[0];
+                btnStart.disabled = false;
+                iziToast.success({
+                    title: 'OK',
+                    message: 'You can press "Start"!',
+                });
+            }
+        }
+    },
 };
 
 flatpickr(input, options);
@@ -54,27 +57,30 @@ function convertMs(ms) {
     return { days, hours, minutes, seconds };
 }
 
-btnStart.addEventListener('click', startTimer);
-
 function addLeadingZero(value) {
     return value.toString().padStart(2, '0');
 }
 
 function startTimer() {
-    const selectedDateTime = userSelectedDate.getTime(); 
-    const intervalId = setInterval(() => {
-    const currentDate = new Date(); 
-    const diff = selectedDateTime - currentDate;
-    const { days, hours, minutes, seconds } = convertMs(diff);
-
-    if (diff <= 0) {
-        clearInterval(intervalId);
-
-    } else {
-        day.textContent = addLeadingZero(days);
-        hour.textContent = addLeadingZero(hours);
-        minute.textContent = addLeadingZero(minutes);
-        second.textContent = addLeadingZero(seconds);
+    if (!userSelectedDate || intervalId) {
+        return;
     }
-}, 1000);
+
+    intervalId = setInterval(() => {
+        const currentDate = new Date();
+        const diff = userSelectedDate.getTime() - currentDate.getTime();
+        const { days, hours, minutes, seconds } = convertMs(diff);
+
+        if (diff <= 0) {
+            clearInterval(intervalId);
+            intervalId = null;
+        } else {
+            day.textContent = addLeadingZero(days);
+            hour.textContent = addLeadingZero(hours);
+            minute.textContent = addLeadingZero(minutes);
+            second.textContent = addLeadingZero(seconds);
+        }
+    }, 1000);
 }
+
+btnStart.addEventListener('click', startTimer);
