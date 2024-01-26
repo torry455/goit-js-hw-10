@@ -13,6 +13,8 @@ const second = document.querySelector('span[data-seconds]');
 let userSelectedDate = null;
 let intervalId = null;
 
+btnStart.disabled = true;
+
 const options = {
     enableTime: true,
     time_24hr: true,
@@ -66,6 +68,10 @@ function startTimer() {
         return;
     }
 
+    input._flatpickr.close();
+    input.disabled = true;
+    btnStart.disabled = true;
+
     intervalId = setInterval(() => {
         const currentDate = new Date();
         const diff = userSelectedDate.getTime() - currentDate.getTime();
@@ -74,6 +80,12 @@ function startTimer() {
         if (diff <= 0) {
             clearInterval(intervalId);
             intervalId = null;
+            day.textContent = '00';
+            hour.textContent = '00';
+            minute.textContent = '00';
+            second.textContent = '00';
+            input.disabled = false;
+            btnStart.disabled = false;
         } else {
             day.textContent = addLeadingZero(days);
             hour.textContent = addLeadingZero(hours);
